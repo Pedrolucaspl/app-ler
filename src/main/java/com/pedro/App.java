@@ -5,6 +5,7 @@ import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) {
+        App.limparTela();
         Biblioteca biblioteca = null;
         try {
             biblioteca = new Biblioteca();
@@ -22,9 +23,7 @@ public class App {
             System.out.println("3. Remover livro");
             System.out.println("4. Atualizar status de leitura");
             System.out.println("0. Sair\n");
-            opcao = scanner.nextInt();
-            scanner.nextLine(); // Limpar o buffer do scanner
-            limparTela();
+            opcao = App.lerInteiro(scanner, "Opção: ");
 
             switch (opcao) {
                 case 1:
@@ -48,12 +47,11 @@ public class App {
                     break;
                 case 2:
                     // Adicionar livro
-                    System.out.println("Digite o título do livro:");
+                    System.out.println("\nDigite o título do livro:");
                     String titulo = scanner.nextLine();
                     System.out.println("Digite o autor do livro:");
                     String autor = scanner.nextLine();
-                    System.out.println("Digite o número de páginas:");
-                    int paginas = scanner.nextInt();
+                    int paginas = App.lerInteiro(scanner, "Digite o número de páginas: \n");
 
                     Livro livro = Livro.builder()
                             .titulo(titulo)
@@ -64,10 +62,16 @@ public class App {
                     App.pausarTela(scanner);
                     App.limparTela();
                     break;
+
                 case 3:
                     // Remover livro
-                    System.out.println("Digite o índice do livro a ser removido:");
-                    int indice = scanner.nextInt();
+                    List<Livro> livrosRemover = App.listarLivrosTitulo(biblioteca);
+                    if (livrosRemover.isEmpty()) {
+                        App.pausarTela(scanner);
+                        App.limparTela();
+                        break;
+                    }
+                    int indice = App.lerInteiro(scanner, "\nÍndice do livro a ser removido: ");
                     if (biblioteca.removerLivro(indice - 1)) {
                         System.out.println("Livro removido com sucesso.");
                     } else {
@@ -76,16 +80,23 @@ public class App {
                     App.pausarTela(scanner);
                     App.limparTela();
                     break;
+
                 case 4:
                     // Atualizar status de leitura
-                    System.out.println("Digite o índice do livro para atualizar o status de leitura:");
-                    int indiceStatus = scanner.nextInt();
+                    List<Livro> livrosStatus = App.listarLivrosTitulo(biblioteca);
+                    if (livrosStatus.isEmpty()) {
+                        App.pausarTela(scanner);
+                        App.limparTela();
+                        break;
+                    }
+                    int indiceStatus = App.lerInteiro(scanner, "\nÍndice do livro para atualizar o status de leitura: ");
+                    App.limparTela();
                     System.out.println("Escolha o novo status de leitura:");
                     System.out.println("1. QUERO_LER");
                     System.out.println("2. LENDO");
                     System.out.println("3. LIDO");
                     System.out.println("4. ABANDONADO");
-                    int statusOpcao = scanner.nextInt();
+                    int statusOpcao = App.lerInteiro(scanner, "Opção de status: ");
                     StatusLeitura novoStatus = null;
                     switch (statusOpcao) {
                         case 1:
@@ -102,12 +113,14 @@ public class App {
                             break;
                         default:
                             System.out.println("Opção de status inválida.");
+                            App.pausarTela(scanner);
+                            App.limparTela();
                             continue; // Volta para o menu principal
                     }
                     if (biblioteca.atualizarStatusLeitura(indiceStatus - 1, novoStatus)) {
-                        System.out.println("Status de leitura atualizado com sucesso.");
+                        System.out.println("\nStatus de leitura atualizado com sucesso.");
                     } else {
-                        System.out.println("Índice inválido.");
+                        System.out.println("\nÍndice inválido.");
                     }
                     App.pausarTela(scanner);
                     App.limparTela();
@@ -123,7 +136,6 @@ public class App {
 
             }
         }
-        scanner.close();
     }
 
     public static void limparTela() {
@@ -136,7 +148,36 @@ public class App {
     }
 
     public static void pausarTela(Scanner scanner) {
-        scanner.nextLine(); // Limpar o buffer do scanner
         System.out.println("Pressione Enter para continuar...");
+        scanner.nextLine(); // Limpar o buffer do scanner
     }
+
+    public static int lerInteiro(Scanner scanner, String mensagem) {
+        int valor;
+        while (true) {
+            System.out.print(mensagem);
+            try {
+                valor = Integer.parseInt(scanner.nextLine());
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada inválida. Digite um número inteiro.");
+            }
+        }
+        return valor;
+    }
+
+    public static List<Livro> listarLivrosTitulo(Biblioteca biblioteca) {
+        List<Livro> livros = biblioteca.listarLivros();
+        if (livros.isEmpty()) {
+            System.out.println("\nNenhum livro cadastrado.");
+        } else {
+            System.out.println("\n=== Lista de Livros ===");
+            for (int i = 0; i < livros.size(); i++) {
+                Livro livro = livros.get(i);
+                System.out.printf("%d. %s\n", i + 1, livro.getTitulo());
+            }
+        }
+        return livros;
+    }
+
 }

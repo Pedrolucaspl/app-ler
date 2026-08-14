@@ -3,32 +3,48 @@ package com.pedro;
 import java.util.List;
 import java.util.Scanner;
 
-public class App 
-{
-    public static void main( String[] args )
-    {
-        Biblioteca biblioteca = new Biblioteca();
+public class App {
+    public static void main(String[] args) {
+        Biblioteca biblioteca = null;
+        try {
+            biblioteca = new Biblioteca();
+        } catch (Exception e) {
+            System.out.println("Erro ao inicializar a biblioteca: " + e.getMessage());
+            return;
+        }
         Scanner scanner = new Scanner(System.in);
         int opcao = -1;
         while (opcao != 0) {
             System.out.println("=== Bem-vindo à Biblioteca ===");
-            System.out.println( "Escolha uma opção:" );
+            System.out.println("Escolha uma opção:");
             System.out.println("1. Listar livros");
             System.out.println("2. Adicionar livro");
             System.out.println("3. Remover livro");
             System.out.println("4. Atualizar status de leitura");
-            System.out.println("0. Sair");
+            System.out.println("0. Sair\n");
             opcao = scanner.nextInt();
             scanner.nextLine(); // Limpar o buffer do scanner
-            
+            limparTela();
+
             switch (opcao) {
                 case 1:
                     // Listar livros
                     List<Livro> livros = biblioteca.listarLivros();
-                    for (int i = 0; i < livros.size(); i++) {
-                        Livro livro = livros.get(i);
-                        System.out.printf("%d. %s\n", i+1, livro);
+                    if (livros.isEmpty()) {
+                        System.out.println("Nenhum livro cadastrado.");
+                        App.pausarTela(scanner);
+                        App.limparTela();
+                        break;
+                    } else {
+                        System.out.println("=== Lista de Livros ===");
+
+                        for (int i = 0; i < livros.size(); i++) {
+                            Livro livro = livros.get(i);
+                            System.out.printf("%d. %s\n", i + 1, livro);
+                        }
                     }
+                    App.pausarTela(scanner);
+                    App.limparTela();
                     break;
                 case 2:
                     // Adicionar livro
@@ -38,7 +54,6 @@ public class App
                     String autor = scanner.nextLine();
                     System.out.println("Digite o número de páginas:");
                     int paginas = scanner.nextInt();
-                    
 
                     Livro livro = Livro.builder()
                             .titulo(titulo)
@@ -46,6 +61,8 @@ public class App
                             .paginas(paginas)
                             .build();
                     biblioteca.adicionarLivro(livro);
+                    App.pausarTela(scanner);
+                    App.limparTela();
                     break;
                 case 3:
                     // Remover livro
@@ -56,6 +73,8 @@ public class App
                     } else {
                         System.out.println("Índice inválido.");
                     }
+                    App.pausarTela(scanner);
+                    App.limparTela();
                     break;
                 case 4:
                     // Atualizar status de leitura
@@ -90,14 +109,34 @@ public class App
                     } else {
                         System.out.println("Índice inválido.");
                     }
+                    App.pausarTela(scanner);
+                    App.limparTela();
                     break;
-                    
-            
+
                 default:
+                    if (opcao != 0) {
+                        System.out.println("Opção inválida. Tente novamente.");
+                        App.pausarTela(scanner);
+                        App.limparTela();
+                    }
                     break;
 
             }
         }
         scanner.close();
+    }
+
+    public static void limparTela() {
+        // Limpa a tela do console (funciona na maioria dos terminais)
+        try {
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void pausarTela(Scanner scanner) {
+        scanner.nextLine(); // Limpar o buffer do scanner
+        System.out.println("Pressione Enter para continuar...");
     }
 }

@@ -16,13 +16,15 @@ public class Menu {
         int opcao;
         do {
             mostrarMenu();
-            opcao = lerInteiro(this.scanner, "Opção: ");
+            opcao = lerInteiro(this.scanner, "Opção: ", 0, 3);
             System.out.println();
             switch (opcao) {
                 case 1:
                     limparTela();
                     System.out.println("Opção 1 selecionada: Listar livros\n");
                     listarLivros();
+                    pausarTela();
+                    limparTela();
                     break;
                 case 2:
                     limparTela();
@@ -37,8 +39,6 @@ public class Menu {
                 case 0:
                     System.out.println("Saindo do programa...");
                     break;
-                default:
-                    System.out.println("Opção inválida. Tente novamente.");
             }
         } while (opcao != 0);
     }
@@ -51,23 +51,12 @@ public class Menu {
         System.out.println("0. Sair");
     }
 
-    public void listarLivros() {
-        List<Livro> livros = biblioteca.listarLivros();
-        if (livros.isEmpty()) {
-            System.out.println("Nenhum livro cadastrado.");
-            pausarTela(this.scanner);
-            limparTela();
-            return;
-        } else {
-            System.out.println("=== Lista de Livros ===");
-
-            for (int i = 0; i < livros.size(); i++) {
-                Livro livro = livros.get(i);
-                System.out.printf("%d. %s\n", i + 1, livro);
-            }
+    public List<Livro> listarLivros() {
+        List<Livro> livros = obterLivrosOuAvisar();
+        if (!livros.isEmpty()) {
+            imprimirLivrosCompleto(livros);
         }
-        pausarTela(this.scanner);
-        limparTela();
+        return livros;
     }
 
     public void adicionarLivro() {
@@ -76,7 +65,7 @@ public class Menu {
             String titulo = this.scanner.nextLine();
             System.out.println("Digite o autor do livro:");
             String autor = this.scanner.nextLine();
-            int paginas = lerInteiro(this.scanner, "Digite o número de páginas: \n");
+            int paginas = lerInteiro(this.scanner, "Digite o número de páginas: \n", 1, Integer.MAX_VALUE);
 
             Livro livro = Livro.builder()
                     .titulo(titulo)
@@ -88,37 +77,63 @@ public class Menu {
         } catch (Exception e) {
             System.out.println("Erro ao adicionar livro: " + e.getMessage());
         }
-        pausarTela(this.scanner);
+        pausarTela();
         limparTela();
         return;
     }
 
     public void removerLivro() {
         System.out.println("=== Remover Livro ===");
-        List<Livro> livrosRemover = listarLivrosTitulo(biblioteca);
-        if (livrosRemover.isEmpty()) {
-            pausarTela(this.scanner);
+        List<Livro> livros = obterLivrosOuAvisar();
+        if (livros.isEmpty()) {
+            pausarTela();
             limparTela();
             return;
         }
-        int indice = lerInteiro(this.scanner, "\nSelecione o índice do livro que deseja remover: ");
+        imprimirLivrosTitulo(livros);
+        int indice = lerInteiro(this.scanner, "Selecione o índice do livro que deseja remover: ", 1, livros.size());
         if (biblioteca.removerLivro(indice - 1)) {
             System.out.println("Livro removido com sucesso.");
         } else {
             System.out.println("Índice inválido.");
         }
-        pausarTela(this.scanner);
+        pausarTela();
         limparTela();
         return;
     }
 
-    public static int lerInteiro(Scanner scanner, String mensagem) {
+    private List<Livro> obterLivrosOuAvisar() {
+        List<Livro> livros = biblioteca.listarLivros();
+        if (livros.isEmpty()) {
+            System.out.println("Nenhum livro cadastrado.");
+        }
+        return livros;
+    }
+
+    private void imprimirLivrosCompleto(List<Livro> livros) {
+        System.out.println("=== Lista de Livros ===");
+        for (int i = 0; i < livros.size(); i++) {
+            System.out.printf("%d. %s\n", i + 1, livros.get(i));
+        }
+    }
+
+    private void imprimirLivrosTitulo(List<Livro> livros) {
+        for (int i = 0; i < livros.size(); i++) {
+            System.out.printf("%d. %s\n", i + 1, livros.get(i).getTitulo());
+        }
+    }
+
+    public static int lerInteiro(Scanner scanner, String mensagem, int min, int max) {
         int valor;
         while (true) {
             System.out.print(mensagem);
             try {
                 valor = Integer.parseInt(scanner.nextLine());
-                break;
+                if (valor >= min && valor <= max) {
+                    break;
+                } else {
+                    System.out.printf("Entrada inválida. Digite um número entre %d e %d.\n", min, max);
+                }
             } catch (NumberFormatException e) {
                 System.out.println("Entrada inválida. Digite um número inteiro.");
             }
@@ -135,21 +150,9 @@ public class Menu {
         }
     }
 
-    public static void pausarTela(Scanner scanner) {
+    public void pausarTela() {
         System.out.println("Pressione Enter para continuar...");
-        scanner.nextLine(); // Limpar o buffer do scanner
+        this.scanner.nextLine(); // Limpar o buffer do scanner
     }
 
-    public static List<Livro> listarLivrosTitulo(Biblioteca biblioteca) {
-        List<Livro> livros = biblioteca.listarLivros();
-        if (livros.isEmpty()) {
-            System.out.println("\nNenhum livro cadastrado.");
-        } else {
-            for (int i = 0; i < livros.size(); i++) {
-                Livro livro = livros.get(i);
-                System.out.printf("%d. %s\n", i + 1, livro.getTitulo());
-            }
-        }
-        return livros;
-    }
 }

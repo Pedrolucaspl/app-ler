@@ -1,6 +1,7 @@
 package com.pedro;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class Menu {
@@ -23,8 +24,6 @@ public class Menu {
                     limparTela();
                     System.out.println("Opção 1 selecionada: Listar livros\n");
                     listarLivros();
-                    pausarTela();
-                    limparTela();
                     break;
                 case 2:
                     limparTela();
@@ -51,15 +50,38 @@ public class Menu {
         System.out.println("0. Sair");
     }
 
-    public List<Livro> listarLivros() {
+    public void listarLivros() {
         List<Livro> livros = obterLivrosOuAvisar();
         if (!livros.isEmpty()) {
             imprimirLivrosCompleto(livros);
         }
-        return livros;
+        pausarTela();
+        limparTela();
+        return;
     }
 
     public void adicionarLivro() {
+        System.out.println("=== Adicionar Livro ===");
+        System.out.print("Como deseja adicionar o livro?");
+        System.out.println("\n1. Simples (título, autor e páginas apenas)");
+        System.out.println("2. Completo (todos os campos)");
+        System.out.println("3. Por ISBN (busca automática)");
+
+        int escolha = lerInteiro(this.scanner, "Escolha uma opção: ", 1, 3);
+        switch (escolha) {
+            case 1:
+                adicionarLivroSimples();
+                break;
+            case 2:
+                adicionarLivroCompleto();
+                break;
+            case 3:
+                adicionarLivroPorIsbn();
+                break;
+        }
+    }
+
+    private void adicionarLivroSimples() {
         try {
             System.out.println("Digite o título do livro:");
             String titulo = this.scanner.nextLine();
@@ -77,12 +99,90 @@ public class Menu {
         } catch (Exception e) {
             System.out.println("Erro ao adicionar livro: " + e.getMessage());
         }
-        pausarTela();
-        limparTela();
-        return;
     }
 
-    public void removerLivro() {
+    private void adicionarLivroCompleto() {
+        try {
+            System.out.println("Digite o título do livro:");
+            String titulo = this.scanner.nextLine();
+            System.out.println("Digite o autor do livro:");
+            String autor = this.scanner.nextLine();
+            int paginas = lerInteiro(this.scanner, "Digite o número de páginas: \n", 1, Integer.MAX_VALUE);
+            System.out.println("Digite o ano de publicação do livro (ou deixe em branco):");
+            String anoInput = this.scanner.nextLine();
+            Integer anoPublicacao = null;
+            if (!anoInput.isBlank()) {
+                try {
+                    anoPublicacao = Integer.parseInt(anoInput);
+                } catch (NumberFormatException e) {
+                    System.out.println("Ano de publicação inválido. Será definido como nulo.");
+                }
+            }
+            System.out.println("Digite o ISBN do livro (ou deixe em branco):");
+            String isbn = this.scanner.nextLine();
+
+            System.out.println("Digite a editora (ou deixe em branco):");
+            String editora = this.scanner.nextLine();
+            System.out.println("Digite o formato (ou deixe em branco):");
+            String formato = this.scanner.nextLine();
+            System.out.println("Digite se você possui o livro (true/false):");
+            boolean possuir = Boolean.parseBoolean(this.scanner.nextLine());
+
+            Livro livro = Livro.builder()
+                    .titulo(titulo)
+                    .autor(autor)
+                    .paginas(paginas)
+                    .anoPublicacao(anoPublicacao)
+                    .isbn(isbn.isBlank() ? null : isbn)
+                    .editora(editora.isBlank() ? null : editora)
+                    .formato(formato.isBlank() ? null : formato)
+                    .possuir(possuir)
+                    .build();
+            biblioteca.adicionarLivro(livro);
+            System.out.printf("Livro %s adicionado com sucesso.\n", titulo);
+        } catch (Exception e) {
+            System.out.println("Erro ao adicionar livro: " + e.getMessage());
+        }
+    }
+
+    private void adicionarLivroPorIsbn() {
+        try {
+            System.out.println("Digite o ISBN do livro:");
+            String isbn = this.scanner.nextLine();
+
+            LivroAPIService apiService = new LivroAPIService();
+            Optional<Livro> resultado = apiService.buscarPorIsbn(isbn);
+
+            if (resultado.isEmpty()) {
+                System.out.println("Livro não encontrado na API. Vamos adicionar manualmente.");
+                adicionarLivroSimples();
+                return;
+            }
+
+            Livro encontrado = resultado.get();
+            System.out.println("Livro encontrado:");
+            System.out.println("Título: " + encontrado.getTitulo());
+            System.out.println("Autor: " + encontrado.getAutor());
+            System.out.println("Páginas (da API, confirme): " + encontrado.getPaginas());
+
+            int paginas = lerInteiro(this.scanner,
+                    "Confirme o número de páginas (ou digite o valor correto): \n", 1, Integer.MAX_VALUE);
+
+            Livro livro = Livro.builder()
+                    .titulo(encontrado.getTitulo())
+                    .autor(encontrado.getAutor())
+                    .paginas(paginas)
+                    .anoPublicacao(encontrado.getAnoPublicacao())
+                    .isbn(isbn)
+                    .build();
+
+            biblioteca.adicionarLivro(livro);
+            System.out.printf("Livro %s adicionado com sucesso.\n", livro.getTitulo());
+        } catch (Exception e) {
+            System.out.println("Erro ao adicionar livro: " + e.getMessage());
+        }
+    }
+     public void removerLivro() {
         System.out.println("=== Remover Livro ===");
         List<Livro> livros = obterLivrosOuAvisar();
         if (livros.isEmpty()) {

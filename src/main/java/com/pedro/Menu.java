@@ -118,22 +118,22 @@ public class Menu {
                     System.out.println("Ano de publicação inválido. Será definido como nulo.");
                 }
             }
-            System.out.println("Digite o ISBN do livro (ou deixe em branco):");
-            String isbn = this.scanner.nextLine();
 
             System.out.println("Digite a editora (ou deixe em branco):");
             String editora = this.scanner.nextLine();
             System.out.println("Digite o formato (ou deixe em branco):");
             String formato = this.scanner.nextLine();
-            System.out.println("Digite se você possui o livro (true/false):");
-            boolean possuir = Boolean.parseBoolean(this.scanner.nextLine());
+            System.out.println("Você possui o livro? (S/N ou Enter para não informar):");
+            String entradaPossuir = this.scanner.nextLine().trim();
+            Boolean possuir = entradaPossuir.isBlank()
+                    ? null
+                    : entradaPossuir.equalsIgnoreCase("S");
 
             Livro livro = Livro.builder()
                     .titulo(titulo)
                     .autor(autor)
                     .paginas(paginas)
                     .anoPublicacao(anoPublicacao)
-                    .isbn(isbn.isBlank() ? null : isbn)
                     .editora(editora.isBlank() ? null : editora)
                     .formato(formato.isBlank() ? null : formato)
                     .possuir(possuir)
@@ -163,17 +163,20 @@ public class Menu {
             System.out.println("Livro encontrado:");
             System.out.println("Título: " + encontrado.getTitulo());
             System.out.println("Autor: " + encontrado.getAutor());
-            System.out.println("Páginas (da API, confirme): " + encontrado.getPaginas());
-
-            int paginas = lerInteiro(this.scanner,
-                    "Confirme o número de páginas (ou digite o valor correto): \n", 1, Integer.MAX_VALUE);
+            System.out.println("Páginas: " + encontrado.getPaginas());
+            System.out.println("Você possui o livro? (S/N ou Enter para não informar):");
+            String entradaPossuir = this.scanner.nextLine().trim();
+            Boolean possuir = entradaPossuir.isBlank()
+                    ? null
+                    : entradaPossuir.equalsIgnoreCase("S");
 
             Livro livro = Livro.builder()
                     .titulo(encontrado.getTitulo())
                     .autor(encontrado.getAutor())
-                    .paginas(paginas)
+                    .paginas(encontrado.getPaginas())
                     .anoPublicacao(encontrado.getAnoPublicacao())
                     .isbn(isbn)
+                    .possuir(possuir)
                     .build();
 
             biblioteca.adicionarLivro(livro);
@@ -182,7 +185,8 @@ public class Menu {
             System.out.println("Erro ao adicionar livro: " + e.getMessage());
         }
     }
-     public void removerLivro() {
+
+    public void removerLivro() {
         System.out.println("=== Remover Livro ===");
         List<Livro> livros = obterLivrosOuAvisar();
         if (livros.isEmpty()) {

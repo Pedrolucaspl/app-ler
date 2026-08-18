@@ -1,4 +1,5 @@
 package com.pedro;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -7,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class Livro{
+public class Livro {
     @NonNull
     private String titulo;
     @NonNull
@@ -21,7 +22,7 @@ public class Livro{
     private String idioma;
     private String formato;
     private String isbn;
-    private boolean possuir;
+    private Boolean possuir;
     private Double nota;
     private StatusLeitura status;
 
@@ -49,10 +50,8 @@ public class Livro{
         if (isbn != null) {
             sb.append("ISBN: ").append(isbn).append("\n");
         }
-        if (possuir) {
-            sb.append("Tenho").append("\n");
-        } else {
-            sb.append("Não tenho").append("\n");
+        if (possuir != null) {
+            sb.append(possuir ? "Tenho" : "Não tenho").append("\n");
         }
         if (nota != null) {
             sb.append("Nota: ").append(nota).append("\n");
